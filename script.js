@@ -6,6 +6,13 @@ hamburger.addEventListener('click', () => {
     hamburger.classList.toggle('active');
     navMenu.classList.toggle('active');
     
+    // Toggle body scroll
+    if (hamburger.classList.contains('active')) {
+        document.body.classList.add('menu-open');
+    } else {
+        document.body.classList.remove('menu-open');
+    }
+    
     // Add hamburger animation
     const spans = hamburger.querySelectorAll('span');
     if (hamburger.classList.contains('active')) {
@@ -24,6 +31,7 @@ document.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', () => {
         hamburger.classList.remove('active');
         navMenu.classList.remove('active');
+        document.body.classList.remove('menu-open');
         
         // Reset hamburger animation
         const spans = hamburger.querySelectorAll('span');
@@ -34,10 +42,11 @@ document.querySelectorAll('.nav-link').forEach(link => {
 });
 
 // Close mobile menu when clicking on social icons
-document.querySelectorAll('.mobile-social-icons .social-icon').forEach(icon => {
+document.querySelectorAll('.mobile-social-container .social-icon').forEach(icon => {
     icon.addEventListener('click', () => {
         hamburger.classList.remove('active');
         navMenu.classList.remove('active');
+        document.body.classList.remove('menu-open');
         
         // Reset hamburger animation
         const spans = hamburger.querySelectorAll('span');
@@ -47,11 +56,30 @@ document.querySelectorAll('.mobile-social-icons .social-icon').forEach(icon => {
     });
 });
 
+// Close mobile menu when clicking on desktop social icons (for smaller screens)
+document.querySelectorAll('.desktop-social-icons .social-icon').forEach(icon => {
+    icon.addEventListener('click', () => {
+        // Only close menu if it's open (mobile view)
+        if (hamburger.classList.contains('active')) {
+            hamburger.classList.remove('active');
+            navMenu.classList.remove('active');
+            document.body.classList.remove('menu-open');
+            
+            // Reset hamburger animation
+            const spans = hamburger.querySelectorAll('span');
+            spans[0].style.transform = 'none';
+            spans[1].style.opacity = '1';
+            spans[2].style.transform = 'none';
+        }
+    });
+});
+
 // Close mobile menu when clicking outside
 document.addEventListener('click', (e) => {
     if (!hamburger.contains(e.target) && !navMenu.contains(e.target)) {
         hamburger.classList.remove('active');
         navMenu.classList.remove('active');
+        document.body.classList.remove('menu-open');
         
         // Reset hamburger animation
         const spans = hamburger.querySelectorAll('span');
