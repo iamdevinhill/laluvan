@@ -19,14 +19,14 @@ Open Graph metadata allows social media platforms to display rich previews when 
 <!-- Basic Open Graph -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://laluvan.com/">
-<meta property="og:title" content="Laluvan - Dark Atmospheric Music">
-<meta property="og:description" content="Experience the haunting sounds of Laluvan...">
+<meta property="og:title" content="Laluvan - Official Website">
+<meta property="og:description" content="The official website of Laluvan">
 <meta property="og:image" content="https://laluvan.com/images/og-image.jpg">
 
 <!-- Image dimensions and alt text -->
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Laluvan - Dark atmospheric music artist">
+<meta property="og:image:alt" content="Laluvan - Official Website">
 
 <!-- Additional Open Graph -->
 <meta property="og:site_name" content="Laluvan">
@@ -38,17 +38,17 @@ Open Graph metadata allows social media platforms to display rich previews when 
 ```html
 <meta property="twitter:card" content="summary_large_image">
 <meta property="twitter:url" content="https://laluvan.com/">
-<meta property="twitter:title" content="Laluvan - Dark Atmospheric Music">
-<meta property="twitter:description" content="Experience the haunting sounds of Laluvan...">
+<meta property="twitter:title" content="Laluvan - Official Website">
+<meta property="twitter:description" content="The official website of Laluvan">
 <meta property="twitter:image" content="https://laluvan.com/images/og-image.jpg">
-<meta property="twitter:image:alt" content="Laluvan - Dark atmospheric music artist">
+<meta property="twitter:image:alt" content="Laluvan - Official Website">
 ```
 
 ### SEO Meta Tags
 
 ```html
 <meta name="description" content="Experience the haunting sounds of Laluvan...">
-<meta name="keywords" content="Laluvan, dark electronic music, atmospheric ambient...">
+<meta name="keywords" content="Official website of Laluvan">
 <meta name="author" content="Laluvan">
 <meta name="robots" content="index, follow">
 ```
@@ -71,7 +71,7 @@ The website includes structured data for music artists using Schema.org markup:
     "@context": "https://schema.org",
     "@type": "MusicGroup",
     "name": "Laluvan",
-    "description": "Dark atmospheric electronic music artist",
+    "description": "Official website of Laluvan",
     "url": "https://laluvan.com",
     "genre": ["Dark Electronic", "Atmospheric Ambient", "Glitch Music"],
     "image": "https://laluvan.com/images/og-image.jpg",
