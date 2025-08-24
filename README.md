@@ -27,12 +27,14 @@ A haunting, immersive website designed with dark atmospheric aesthetics for the 
 - **Performance Optimized**: Throttled scroll events and efficient animations
 - **Accessibility**: Keyboard navigation and semantic HTML
 - **Cross-browser Compatible**: Modern CSS with fallbacks
+- **Supabase Integration**: Secure mailing list signup with database storage
 
 ## Getting Started
 
 ### Prerequisites
 - Modern web browser (Chrome, Firefox, Safari, Edge)
 - Local web server (optional, for development)
+- Supabase account and project (for mailing list functionality)
 
 ### Installation
 1. Clone or download the project files
@@ -52,10 +54,13 @@ A haunting, immersive website designed with dark atmospheric aesthetics for the 
 ### File Structure
 ```
 new_music/
-├── index.html          # Main HTML structure
-├── styles.css          # CSS styling and animations
-├── script.js           # JavaScript functionality
-└── README.md           # This documentation
+├── index.html              # Main HTML structure
+├── styles.css              # CSS styling and animations
+├── script.js               # JavaScript functionality
+├── config.js               # Supabase configuration
+├── env.example             # Environment variables template
+├── SUPABASE_SETUP.md       # Supabase integration guide
+└── README.md               # This documentation
 ```
 
 ## Customization
@@ -171,9 +176,10 @@ Potential features for future versions:
 - Language localization
 - Blog/news section
 - Tour dates integration
-- Newsletter signup
+- Enhanced mailing list management
 - Music streaming integration
 - E-commerce functionality for merch
+- Analytics dashboard for fan engagement
 
 ---
 
