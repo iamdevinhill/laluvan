@@ -1,6 +1,4 @@
-# Laluvan - Dark Atmospheric Music Artist Website
-
-A haunting, immersive website designed with dark atmospheric aesthetics for the electronic music artist Laluvan. Built with HTML, CSS, and JavaScript, featuring a minimalist, moody design with glitch effects, atmospheric overlays, and cinematic animations.
+# Laluvan - Artist Website
 
 ## Features
 
