@@ -30,7 +30,7 @@
     <meta name="robots" content="index, follow">
     
     <!-- Favicon and App Icons -->
-    <link rel="icon" type="image/png" href="laluven_logo.png">
+    <link rel="icon" type="image/png" href="laluven_logo_l.png">
     <link rel="apple-touch-icon" href="laluven_logo.png">
     
     <link rel="stylesheet" href="styles.css">
@@ -267,24 +267,31 @@
                     <h3>Get in Touch</h3>
                     <p>For bookings, collaborations, or communication.</p>
                     <div class="contact-links">
-                        <a href="mailto:contact@laluvan.com" class="contact-link">
-                            <span class="link-icon">✉</span>
-                            contact@laluvan.com
+                        <a href="mailto:laluvanmusic@gmail.com" class="contact-link">
+                            <span class="link-icon"></span>
+                            laluvanmusic@gmail.com
                         </a>
                     </div>
                 </div>
                 <div class="contact-form">
-                    <form>
+                    <form id="signup-form" novalidate>
                         <div class="form-group">
-                            <input type="text" placeholder="Name" required>
+                            <input type="text" id="firstName" placeholder="First Name" required>
+                            <span class="error-message" id="firstName-error"></span>
                         </div>
                         <div class="form-group">
-                            <input type="email" placeholder="Email" required>
+                            <input type="text" id="lastName" placeholder="Last Name" required>
+                            <span class="error-message" id="lastName-error"></span>
                         </div>
                         <div class="form-group">
-                            <textarea placeholder="Message" rows="5" required></textarea>
+                            <input type="email" id="email" placeholder="Email Address" required>
+                            <span class="error-message" id="email-error"></span>
                         </div>
-                        <button type="submit" class="submit-btn">Send Message</button>
+                        <div class="form-group">
+                            <input type="tel" id="phone" placeholder="Phone Number (10 digits)" required>
+                            <span class="error-message" id="phone-error"></span>
+                        </div>
+                        <button type="submit" class="submit-btn">Sign Up</button>
                     </form>
                 </div>
             </div>

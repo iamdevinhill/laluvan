@@ -415,3 +415,128 @@ document.addEventListener('keydown', (e) => {
         console.log('Konami code activated!');
     }
 });
+
+// Form validation for signup form
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('signup-form');
+    const firstName = document.getElementById('firstName');
+    const lastName = document.getElementById('lastName');
+    const email = document.getElementById('email');
+    const phone = document.getElementById('phone');
+
+    // Validation functions
+    function validateFirstName() {
+        const value = firstName.value.trim();
+        const errorElement = document.getElementById('firstName-error');
+        
+        if (value.length < 2) {
+            showError(firstName, errorElement, 'First name must be at least 2 characters long');
+            return false;
+        } else {
+            showSuccess(firstName, errorElement);
+            return true;
+        }
+    }
+
+    function validateLastName() {
+        const value = lastName.value.trim();
+        const errorElement = document.getElementById('lastName-error');
+        
+        if (value.length < 2) {
+            showError(lastName, errorElement, 'Last name must be at least 2 characters long');
+            return false;
+        } else {
+            showSuccess(lastName, errorElement);
+            return true;
+        }
+    }
+
+    function validateEmail() {
+        const value = email.value.trim();
+        const errorElement = document.getElementById('email-error');
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        
+        if (!emailRegex.test(value)) {
+            showError(email, errorElement, 'Please enter a valid email address');
+            return false;
+        } else {
+            showSuccess(email, errorElement);
+            return true;
+        }
+    }
+
+    function validatePhone() {
+        const value = phone.value.replace(/\D/g, ''); // Remove non-digits
+        const errorElement = document.getElementById('phone-error');
+        
+        if (value.length !== 10) {
+            showError(phone, errorElement, 'Phone number must be exactly 10 digits (including area code)');
+            return false;
+        } else {
+            showSuccess(phone, errorElement);
+            return true;
+        }
+    }
+
+    function showError(input, errorElement, message) {
+        input.classList.remove('valid');
+        input.classList.add('error');
+        errorElement.textContent = message;
+        errorElement.classList.add('show');
+    }
+
+    function showSuccess(input, errorElement) {
+        input.classList.remove('error');
+        input.classList.add('valid');
+        errorElement.classList.remove('show');
+    }
+
+    // Real-time validation
+    firstName.addEventListener('blur', validateFirstName);
+    lastName.addEventListener('blur', validateLastName);
+    email.addEventListener('blur', validateEmail);
+    phone.addEventListener('blur', validatePhone);
+
+    // Phone number formatting (only allow digits)
+    phone.addEventListener('input', function(e) {
+        // Remove any non-digit characters
+        this.value = this.value.replace(/\D/g, '');
+        
+        // Limit to 10 digits
+        if (this.value.length > 10) {
+            this.value = this.value.slice(0, 10);
+        }
+    });
+
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const isFirstNameValid = validateFirstName();
+        const isLastNameValid = validateLastName();
+        const isEmailValid = validateEmail();
+        const isPhoneValid = validatePhone();
+        
+        if (isFirstNameValid && isLastNameValid && isEmailValid && isPhoneValid) {
+            // All validations passed
+            alert('Thank you for signing up! Your information has been submitted successfully.');
+            form.reset();
+            
+            // Clear validation states
+            [firstName, lastName, email, phone].forEach(input => {
+                input.classList.remove('valid', 'error');
+            });
+            
+            // Hide all error messages
+            document.querySelectorAll('.error-message').forEach(error => {
+                error.classList.remove('show');
+            });
+        } else {
+            // Show first error message
+            if (!isFirstNameValid) firstName.focus();
+            else if (!isLastNameValid) lastName.focus();
+            else if (!isEmailValid) email.focus();
+            else if (!isPhoneValid) phone.focus();
+        }
+    });
+});
