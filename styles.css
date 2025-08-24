@@ -738,6 +738,21 @@ section:nth-child(even) {
     transform: translateY(-3px);
 }
 
+.footer-disclaimer {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(229, 229, 229, 0.1);
+    text-align: center;
+}
+
+.footer-disclaimer p {
+    color: #a1a1aa;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    margin: 0;
+    opacity: 0.8;
+}
+
 /* Animations */
 @keyframes smoke-drift {
     0% { transform: translateX(-100%); }

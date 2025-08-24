@@ -11,6 +11,13 @@ console.log('🔧 Supabase config in script.js:', {
     key: SUPABASE_ANON_KEY ? '***' + SUPABASE_ANON_KEY.slice(-4) : 'undefined'
 });
 
+// Check if config values are available
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    console.error('❌ Missing Supabase configuration!');
+    console.error('❌ SUPABASE_URL:', SUPABASE_URL);
+    console.error('❌ SUPABASE_ANON_KEY:', SUPABASE_ANON_KEY ? '***' + SUPABASE_ANON_KEY.slice(-4) : 'undefined');
+}
+
 // Initialize Supabase client when library is available
 let supabaseClient = null;
 
@@ -25,6 +32,23 @@ function initializeSupabase() {
             console.log('✅ Supabase client initialized:', supabaseClient);
             console.log('🔧 Supabase client methods:', Object.keys(supabaseClient));
             console.log('🔧 Supabase client from method:', typeof supabaseClient.from);
+            
+            // Trigger a custom event when Supabase is ready
+            window.dispatchEvent(new CustomEvent('supabaseReady'));
+            
+            // Test if the laluvan_logs table is accessible
+            console.log('🔍 Testing table access...');
+            supabaseClient.from('laluvan_logs').select('count', { count: 'exact', head: true })
+                .then(({ count, error }) => {
+                    if (error) {
+                        console.error('❌ Cannot access laluvan_logs table:', error);
+                    } else {
+                        console.log('✅ laluvan_logs table is accessible');
+                    }
+                })
+                .catch(err => {
+                    console.error('❌ Error testing table access:', err);
+                });
         } catch (error) {
             console.error('❌ Error initializing Supabase client:', error);
         }
@@ -105,14 +129,25 @@ async function logVisitor(additionalData = {}) {
             ...additionalData
         };
         
-        // console.log('📊 Logging visitor:', logData);
+        console.log('📊 Logging visitor:', logData);
+        
+        // Check if Supabase client is available
+        if (!supabaseClient) {
+            console.log('⚠️ Supabase client not available, skipping visitor log');
+            return;
+        }
         
         // Send to Supabase
+        console.log('🚀 Attempting to insert into laluvan_logs table...');
+        console.log('🔧 Table name: laluvan_logs');
+        console.log('🔧 Data to insert:', logData);
+        
         const { data, error } = await supabaseClient
             .from('laluvan_logs')
             .insert([logData]);
         
         if (error) {
+            console.error('❌ Supabase insert error:', error);
             throw new Error(error.message);
         }
         
@@ -125,11 +160,22 @@ async function logVisitor(additionalData = {}) {
 
 // Log visitor when page loads
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize Supabase
+    // Initialize Supabase first
     initializeSupabase();
     
-    // Log visitor immediately
-    logVisitor();
+    // Listen for Supabase ready event
+    window.addEventListener('supabaseReady', () => {
+        console.log('🎯 Supabase ready event received, logging visitor...');
+        logVisitor();
+    });
+    
+    // Fallback: also try to log visitor after a delay
+    setTimeout(() => {
+        if (supabaseClient && !sessionId) {
+            console.log('🕐 Fallback: logging visitor after delay...');
+            logVisitor();
+        }
+    }, 1000);
 });
 
 // Log visitor on page visibility change (when user returns to tab)
