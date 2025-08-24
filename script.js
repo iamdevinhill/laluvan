@@ -273,35 +273,7 @@ function enhanceSmokeEffect() {
     }
 }
 
-// Cursor trail effect
-function createCursorTrail() {
-    const trail = document.createElement('div');
-    trail.style.position = 'fixed';
-    trail.style.width = '4px';
-    trail.style.height = '4px';
-    trail.style.background = 'rgba(255, 255, 255, 0.3)';
-    trail.style.borderRadius = '50%';
-    trail.style.pointerEvents = 'none';
-    trail.style.zIndex = '9999';
-    trail.style.transition = 'all 0.1s ease';
-    document.body.appendChild(trail);
-    
-    let mouseX = 0;
-    let mouseY = 0;
-    
-    document.addEventListener('mousemove', (e) => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-        
-        trail.style.left = mouseX + 'px';
-        trail.style.top = mouseY + 'px';
-        trail.style.opacity = '1';
-        
-        setTimeout(() => {
-            trail.style.opacity = '0';
-        }, 100);
-    });
-}
+
 
 // Initialize effects when page loads
 document.addEventListener('DOMContentLoaded', () => {
@@ -316,7 +288,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize effects
     enhanceGlitchEffect();
     enhanceSmokeEffect();
-    createCursorTrail();
     
     // Add random glitch moments
     setInterval(() => {

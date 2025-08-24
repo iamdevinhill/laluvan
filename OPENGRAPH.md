@@ -1,4 +1,4 @@
-# Open Graph Metadata Guide for Laluven
+# Open Graph Metadata Guide for Laluvan
 
 This document explains the Open Graph metadata implementation for optimal social media sharing and SEO.
 
@@ -18,18 +18,18 @@ Open Graph metadata allows social media platforms to display rich previews when 
 ```html
 <!-- Basic Open Graph -->
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://laluven.com/">
-<meta property="og:title" content="Laluven - Dark Atmospheric Music">
-<meta property="og:description" content="Experience the haunting sounds of Laluven...">
-<meta property="og:image" content="https://laluven.com/images/og-image.jpg">
+<meta property="og:url" content="https://laluvan.com/">
+<meta property="og:title" content="Laluvan - Dark Atmospheric Music">
+<meta property="og:description" content="Experience the haunting sounds of Laluvan...">
+<meta property="og:image" content="https://laluvan.com/images/og-image.jpg">
 
 <!-- Image dimensions and alt text -->
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Laluven - Dark atmospheric music artist">
+<meta property="og:image:alt" content="Laluvan - Dark atmospheric music artist">
 
 <!-- Additional Open Graph -->
-<meta property="og:site_name" content="Laluven">
+<meta property="og:site_name" content="Laluvan">
 <meta property="og:locale" content="en_US">
 ```
 
@@ -37,19 +37,19 @@ Open Graph metadata allows social media platforms to display rich previews when 
 
 ```html
 <meta property="twitter:card" content="summary_large_image">
-<meta property="twitter:url" content="https://laluven.com/">
-<meta property="twitter:title" content="Laluven - Dark Atmospheric Music">
-<meta property="twitter:description" content="Experience the haunting sounds of Laluven...">
-<meta property="twitter:image" content="https://laluven.com/images/og-image.jpg">
-<meta property="twitter:image:alt" content="Laluven - Dark atmospheric music artist">
+<meta property="twitter:url" content="https://laluvan.com/">
+<meta property="twitter:title" content="Laluvan - Dark Atmospheric Music">
+<meta property="twitter:description" content="Experience the haunting sounds of Laluvan...">
+<meta property="twitter:image" content="https://laluvan.com/images/og-image.jpg">
+<meta property="twitter:image:alt" content="Laluvan - Dark atmospheric music artist">
 ```
 
 ### SEO Meta Tags
 
 ```html
-<meta name="description" content="Experience the haunting sounds of Laluven...">
-<meta name="keywords" content="Laluven, dark electronic music, atmospheric ambient...">
-<meta name="author" content="Laluven">
+<meta name="description" content="Experience the haunting sounds of Laluvan...">
+<meta name="keywords" content="Laluvan, dark electronic music, atmospheric ambient...">
+<meta name="author" content="Laluvan">
 <meta name="robots" content="index, follow">
 ```
 
@@ -70,17 +70,17 @@ The website includes structured data for music artists using Schema.org markup:
 {
     "@context": "https://schema.org",
     "@type": "MusicGroup",
-    "name": "Laluven",
+    "name": "Laluvan",
     "description": "Dark atmospheric electronic music artist",
-    "url": "https://laluven.com",
+    "url": "https://laluvan.com",
     "genre": ["Dark Electronic", "Atmospheric Ambient", "Glitch Music"],
-    "image": "https://laluven.com/images/og-image.jpg",
+    "image": "https://laluvan.com/images/og-image.jpg",
     "sameAs": [
-        "https://open.spotify.com/artist/laluven",
-        "https://music.apple.com/artist/laluven",
-        "https://www.instagram.com/laluven",
-        "https://www.tiktok.com/@laluven",
-        "https://www.youtube.com/@laluven"
+        "https://open.spotify.com/artist/laluvan",
+        "https://music.apple.com/artist/laluvan",
+        "https://www.instagram.com/laluvanmusic/",
+        "https://www.tiktok.com/@laluvan",
+        "https://www.youtube.com/@LaluvanMusic"
     ],
     "album": [
         {
@@ -102,7 +102,7 @@ The website includes structured data for music artists using Schema.org markup:
 **File size**: Under 8MB  
 
 **Design Guidelines**:
-- Include the Laluven logo/name prominently
+- Include the Laluvan logo/name prominently
 - Use dark atmospheric aesthetics matching the website
 - Ensure text is readable at small sizes
 - Avoid placing important elements near edges
@@ -118,7 +118,7 @@ The website includes structured data for music artists using Schema.org markup:
 
 ### Update URLs
 
-Replace `https://laluven.com` with your actual domain in:
+Replace `https://laluvan.com` with your actual domain in:
 - `og:url`
 - `twitter:url`
 - `url` in structured data
@@ -132,9 +132,9 @@ Modify the `sameAs` array in structured data with actual social media URLs:
 "sameAs": [
     "https://open.spotify.com/artist/YOUR_SPOTIFY_ID",
     "https://music.apple.com/artist/YOUR_APPLE_ID",
-    "https://www.instagram.com/YOUR_INSTAGRAM",
+            "https://www.instagram.com/laluvanmusic/",
     "https://www.tiktok.com/@YOUR_TIKTOK",
-    "https://www.youtube.com/@YOUR_YOUTUBE"
+            "https://www.youtube.com/@LaluvanMusic"
 ]
 ```
 
