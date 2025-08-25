@@ -74,7 +74,12 @@ const IP_CACHE_MAX_SIZE = 100; // Maximum number of cached IPs
 
 // Database rate limiting to prevent duplicate logs
 const dbRateLimit = new Map();
-const DB_RATE_LIMIT_DURATION = 30 * 1000; // 30 seconds between logs for same IP
+const DB_RATE_LIMIT_DURATION = 60 * 1000; // Increased to 60 seconds between logs for same IP
+
+// Additional protection against rapid-fire logging
+let isCurrentlyLogging = false;
+let lastLogAttempt = 0;
+const MIN_LOG_INTERVAL = 2000; // 2 seconds minimum between any log attempts
 
 // Generate unique session ID
 function generateSessionId() {
@@ -326,12 +331,88 @@ window.setRateLimitDuration = function(seconds) {
     console.log(`⚙️ Rate limit duration changed from ${oldDuration}s to ${seconds}s`);
 };
 
+// Reset current logging state (for testing)
+window.resetLoggingState = function() {
+    isCurrentlyLogging = false;
+    lastLogAttempt = 0;
+    console.log('🔄 Logging state reset');
+};
+
+// Test rate limiting system
+window.testRateLimiting = function() {
+    console.log('🧪 Testing Rate Limiting System:');
+    console.log(`  🔧 Rate limit duration: ${DB_RATE_LIMIT_DURATION / 1000}s`);
+    console.log(`  🔧 Min log interval: ${MIN_LOG_INTERVAL / 1000}s`);
+    console.log(`  🔧 Currently logging: ${isCurrentlyLogging}`);
+    console.log(`  🔧 Last log attempt: ${lastLogAttempt ? new Date(lastLogAttempt).toLocaleTimeString() : 'Never'}`);
+    console.log(`  🔧 Rate limited IPs: ${dbRateLimit.size}`);
+    
+    // Show current rate limits
+    if (dbRateLimit.size > 0) {
+        console.log('  📋 Current rate limits:');
+        const now = Date.now();
+        for (const [ip, timestamp] of dbRateLimit.entries()) {
+            const age = now - timestamp;
+            const remaining = Math.ceil((DB_RATE_LIMIT_DURATION - age) / 1000);
+            console.log(`    ${ip}: ${remaining > 0 ? remaining + 's remaining' : 'expired'}`);
+        }
+    }
+};
+
 // Enhanced visitor logging with session tracking
 // NOTE: Current table schema only supports basic fields (ip, user_agent, timestamp, page, country, city, region)
 // To enable full tracking, add these fields to your laluvan_logs table:
 // ALTER TABLE public.laluvan_logs ADD COLUMN session_id text null, ADD COLUMN page_views integer null, ADD COLUMN screen_resolution text null, ADD COLUMN viewport text null, ADD COLUMN referrer text null;
 async function logVisitor(additionalData = {}) {
     try {
+        // ADDITIONAL PROTECTION AGAINST RAPID-FIRE LOGGING
+        const now = Date.now();
+        if (isCurrentlyLogging) {
+            console.log('⚠️ Already logging, skipping duplicate request.');
+            return;
+        }
+        
+        if (now - lastLogAttempt < MIN_LOG_INTERVAL) {
+            const remainingTime = Math.ceil((MIN_LOG_INTERVAL - (now - lastLogAttempt)) / 1000);
+            console.log(`⏰ Too soon since last log attempt. Wait ${remainingTime}s.`);
+            return;
+        }
+        
+        isCurrentlyLogging = true;
+        lastLogAttempt = now;
+        
+        // RATE LIMITING CHECK - MUST HAPPEN FIRST
+        // Get IP address immediately to check rate limiting before any other operations
+        let currentIp = 'unknown';
+        
+        // Try to get IP from cache first (fastest)
+        const cachedData = ipCache.get('current_ip');
+        if (cachedData && (Date.now() - cachedData.timestamp) < IP_CACHE_DURATION) {
+            currentIp = cachedData.data.ip;
+        } else {
+            // If no cached IP, we need to fetch it to check rate limiting
+            try {
+                const response = await fetch('https://ipapi.co/json/');
+                const data = await response.json();
+                currentIp = data.ip || 'unknown';
+            } catch (error) {
+                console.log('⚠️ Could not fetch IP for rate limiting check:', error.message);
+                currentIp = 'unknown';
+            }
+        }
+        
+        // Check rate limiting BEFORE any database operations
+        if (isIpRateLimited(currentIp)) {
+            console.log('⚠️ IP rate limited, skipping visitor log completely.');
+            isCurrentlyLogging = false; // Reset flag
+            return;
+        }
+        
+        // Mark IP as logged IMMEDIATELY to prevent race conditions
+        markIpAsLogged(currentIp);
+        
+        console.log(`🔒 Rate limiting check passed for IP: ${currentIp}`);
+        
         // Generate session ID if not exists
         if (!sessionId) {
             sessionId = generateSessionId();
@@ -353,19 +434,10 @@ async function logVisitor(additionalData = {}) {
         // Get referrer
         const referrer = document.referrer || 'direct';
         
-        // Get IP address and location data with caching
+        // Get full location data with caching (IP already fetched above)
         const locationData = await getIpAndLocation();
         const { ip, country, city, region } = locationData;
         
-        // Check if IP is rate limited
-        if (isIpRateLimited(ip)) {
-            console.log('⚠️ IP rate limited, skipping visitor log.');
-            return;
-        }
-
-        // Mark IP as logged
-        markIpAsLogged(ip);
-
         // Prepare log data - only include fields that exist in the table
         const logData = {
             ip: ip,
@@ -384,6 +456,7 @@ async function logVisitor(additionalData = {}) {
         // Check if Supabase client is available
         if (!supabaseClient) {
             console.log('⚠️ Supabase client not available, skipping visitor log');
+            isCurrentlyLogging = false; // Reset flag
             return;
         }
         
@@ -391,6 +464,7 @@ async function logVisitor(additionalData = {}) {
         const connectionOk = await testSupabaseConnection();
         if (!connectionOk) {
             console.log('⚠️ Supabase connection test failed, skipping visitor log');
+            isCurrentlyLogging = false; // Reset flag
             return;
         }
         
@@ -413,6 +487,9 @@ async function logVisitor(additionalData = {}) {
         
     } catch (error) {
         console.error('❌ Error in visitor logging:', error);
+    } finally {
+        // Always reset the logging flag
+        isCurrentlyLogging = false;
     }
 }
 
