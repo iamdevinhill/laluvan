@@ -1,6 +1,6 @@
 # Laluvan - Artist Website
 
-A sophisticated, feature-rich artist website with advanced analytics, visitor tracking, and mailing list management. Built with modern web technologies and integrated with Supabase for secure data management.
+A sophisticated, feature-rich artist website with advanced analytics, visitor tracking, and mailing list management. Built as a static website with modern web technologies and integrated with Supabase for secure data management.
 
 ## 🎵 Features
 
@@ -23,13 +23,13 @@ A sophisticated, feature-rich artist website with advanced analytics, visitor tr
 - **Mailing List Management**: Secure signup form with validation
 - **Visitor Logs**: Comprehensive tracking in `laluvan_logs` table
 - **Row Level Security**: Proper RLS policies for data protection
-- **Real-time Validation**: Client-side and server-side form validation
+- **Real-time Validation**: Client-side form validation
 - **Error Handling**: Graceful error management with user feedback
 
 ### Social Media & SEO
 - **Open Graph**: Rich social media previews for Facebook, Twitter, LinkedIn
 - **Structured Data**: Schema.org markup for search engine optimization
-- **Social Media Integration**: TikTok, Instagram, and other platform links
+- **Social Media Integration**: TikTok, Instagram, YouTube links
 - **Favicon & App Icons**: Complete icon set for all platforms
 
 ## 🚀 Quick Start
@@ -165,7 +165,7 @@ window.getCacheStats()
 
 ### Data Protection
 - **Row Level Security**: Database-level access control
-- **Input Validation**: Client-side and server-side validation
+- **Input Validation**: Client-side form validation
 - **Rate Limiting**: Prevents abuse and duplicate submissions
 - **Secure Credentials**: Environment variable management
 - **HTTPS Enforcement**: Secure connections in production
@@ -192,11 +192,11 @@ window.getCacheStats()
 - **Minimal Dependencies**: Lightweight, fast-loading code
 - **Optimized Images**: WebP format support
 
-### Backend Optimization
+### Database Optimization
 - **Database Indexing**: Optimized queries for fast performance
-- **Connection Pooling**: Efficient database connections
-- **Rate Limiting**: Prevents server overload
-- **Error Recovery**: Graceful handling of failures
+- **Connection Management**: Efficient Supabase client connections
+- **Rate Limiting**: Prevents API abuse and duplicate requests
+- **Error Recovery**: Graceful handling of network failures
 
 ## 🚀 Deployment
 
@@ -214,7 +214,7 @@ window.getCacheStats()
 - **Vercel**: Automatic deployment with environment variables
 - **Netlify**: Easy setup with form handling
 - **GitHub Pages**: Static hosting with custom domain
-- **Custom Server**: Full control over configuration
+- **Any Static Host**: Works on any static file hosting service
 
 ## 🛠️ Development Tools
 
@@ -252,9 +252,9 @@ Enable detailed logging in browser console for development and troubleshooting.
 ## 🔮 Future Enhancements
 
 ### Planned Features
-- **Audio Visualization**: Web Audio API integration
-- **3D Elements**: Three.js interactive components
-- **E-commerce**: Merchandise sales integration
+- **Music Section**: Track listings and audio players
+- **Merchandise Section**: Product catalog and sales
+- **Gallery Section**: Photo and video content
 - **Blog System**: News and updates section
 - **Tour Integration**: Live performance dates
 - **Enhanced Analytics**: Real-time dashboard
@@ -265,7 +265,7 @@ Enable detailed logging in browser console for development and troubleshooting.
 - **Service Workers**: Offline functionality
 - **WebSocket**: Real-time updates
 - **CDN Integration**: Global content delivery
-- **Advanced Caching**: Browser and server caching
+- **Advanced Caching**: Browser caching strategies
 
 ## 🤝 Contributing
 
@@ -274,6 +274,6 @@ Contributions are welcome! Please feel free to submit issues and pull requests.
 ## 📞 Support
 
 For questions or support:
-- **Email**: contact@laluvan.com
+- **Email**: laluvanmusic@gmail.com
 - **Documentation**: Check the included `.md` files
 - **Console**: Use the built-in debugging tools

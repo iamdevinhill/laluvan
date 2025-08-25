@@ -74,12 +74,12 @@ const IP_CACHE_MAX_SIZE = 100; // Maximum number of cached IPs
 
 // Database rate limiting to prevent duplicate logs
 const dbRateLimit = new Map();
-const DB_RATE_LIMIT_DURATION = 60 * 1000; // Increased to 60 seconds between logs for same IP
+const DB_RATE_LIMIT_DURATION = 300 * 1000; // Increased to 5 minutes between logs for same IP
 
 // Additional protection against rapid-fire logging
 let isCurrentlyLogging = false;
 let lastLogAttempt = 0;
-const MIN_LOG_INTERVAL = 2000; // 2 seconds minimum between any log attempts
+const MIN_LOG_INTERVAL = 5000; // 5 seconds minimum between any log attempts
 
 // Generate unique session ID
 function generateSessionId() {
@@ -93,12 +93,19 @@ function isIpRateLimited(ip) {
     const now = Date.now();
     const lastLogTime = dbRateLimit.get(ip);
     
+    console.log(`🔍 Rate limiting check for IP: ${ip}`);
+    console.log(`🔍 Last log time: ${lastLogTime ? new Date(lastLogTime).toLocaleTimeString() : 'Never'}`);
+    console.log(`🔍 Current time: ${new Date(now).toLocaleTimeString()}`);
+    console.log(`🔍 Time difference: ${lastLogTime ? Math.floor((now - lastLogTime) / 1000) : 'N/A'}s`);
+    console.log(`🔍 Rate limit duration: ${DB_RATE_LIMIT_DURATION / 1000}s`);
+    
     if (lastLogTime && (now - lastLogTime) < DB_RATE_LIMIT_DURATION) {
         const remainingTime = Math.ceil((DB_RATE_LIMIT_DURATION - (now - lastLogTime)) / 1000);
         console.log(`⏰ IP ${ip} is rate limited. Wait ${remainingTime}s before next log.`);
         return true;
     }
     
+    console.log(`✅ IP ${ip} is not rate limited, proceeding with log.`);
     return false;
 }
 
@@ -338,6 +345,17 @@ window.resetLoggingState = function() {
     console.log('🔄 Logging state reset');
 };
 
+// Clear all rate limits and reset system (for testing)
+window.resetAllRateLimits = function() {
+    isCurrentlyLogging = false;
+    lastLogAttempt = 0;
+    dbRateLimit.clear();
+    ipCache.clear();
+    hasLoggedInitialVisit = false;
+    console.log('🔄 All rate limits and caches cleared');
+    console.log('🔄 System reset - ready for fresh testing');
+};
+
 // Test rate limiting system
 window.testRateLimiting = function() {
     console.log('🧪 Testing Rate Limiting System:');
@@ -381,25 +399,13 @@ async function logVisitor(additionalData = {}) {
         isCurrentlyLogging = true;
         lastLogAttempt = now;
         
-        // RATE LIMITING CHECK - MUST HAPPEN FIRST
-        // Get IP address immediately to check rate limiting before any other operations
-        let currentIp = 'unknown';
+        // Get full location data with caching first
+        const locationData = await getIpAndLocation();
+        const { ip, country, city, region } = locationData;
         
-        // Try to get IP from cache first (fastest)
-        const cachedData = ipCache.get('current_ip');
-        if (cachedData && (Date.now() - cachedData.timestamp) < IP_CACHE_DURATION) {
-            currentIp = cachedData.data.ip;
-        } else {
-            // If no cached IP, we need to fetch it to check rate limiting
-            try {
-                const response = await fetch('https://ipapi.co/json/');
-                const data = await response.json();
-                currentIp = data.ip || 'unknown';
-            } catch (error) {
-                console.log('⚠️ Could not fetch IP for rate limiting check:', error.message);
-                currentIp = 'unknown';
-            }
-        }
+        // RATE LIMITING CHECK - MUST HAPPEN AFTER IP IS FETCHED
+        // Use the actual IP that will be logged to prevent mismatches
+        const currentIp = ip;
         
         // Check rate limiting BEFORE any database operations
         if (isIpRateLimited(currentIp)) {
@@ -433,10 +439,6 @@ async function logVisitor(additionalData = {}) {
         
         // Get referrer
         const referrer = document.referrer || 'direct';
-        
-        // Get full location data with caching (IP already fetched above)
-        const locationData = await getIpAndLocation();
-        const { ip, country, city, region } = locationData;
         
         // Prepare log data - only include fields that exist in the table
         const logData = {
