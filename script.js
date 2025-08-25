@@ -72,9 +72,44 @@ const ipCache = new Map();
 const IP_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 const IP_CACHE_MAX_SIZE = 100; // Maximum number of cached IPs
 
+// Database rate limiting to prevent duplicate logs
+const dbRateLimit = new Map();
+const DB_RATE_LIMIT_DURATION = 30 * 1000; // 30 seconds between logs for same IP
+
 // Generate unique session ID
 function generateSessionId() {
     return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+// Check if IP is rate limited (prevent duplicate logs)
+function isIpRateLimited(ip) {
+    if (!ip || ip === 'unknown') return false;
+    
+    const now = Date.now();
+    const lastLogTime = dbRateLimit.get(ip);
+    
+    if (lastLogTime && (now - lastLogTime) < DB_RATE_LIMIT_DURATION) {
+        const remainingTime = Math.ceil((DB_RATE_LIMIT_DURATION - (now - lastLogTime)) / 1000);
+        console.log(`⏰ IP ${ip} is rate limited. Wait ${remainingTime}s before next log.`);
+        return true;
+    }
+    
+    return false;
+}
+
+// Mark IP as recently logged
+function markIpAsLogged(ip) {
+    if (!ip || ip === 'unknown') return;
+    dbRateLimit.set(ip, Date.now());
+    
+    // Clean up old rate limit entries (keep only last 1000 entries)
+    if (dbRateLimit.size > 1000) {
+        const entries = Array.from(dbRateLimit.entries());
+        entries.sort((a, b) => a[1] - b[1]);
+        const toRemove = entries.slice(0, 500); // Remove oldest 500 entries
+        toRemove.forEach(([key]) => dbRateLimit.delete(key));
+        console.log(`🧹 Cleaned up ${toRemove.length} old rate limit entries`);
+    }
 }
 
 // Get IP and location data with caching
@@ -258,6 +293,39 @@ window.getCacheStats = function() {
     console.log(`  🎯 Cache hit rate: ${validEntries > 0 ? Math.round((validEntries / ipCache.size) * 100) : 0}%`);
 };
 
+// Rate limiting management functions (can be called from console)
+window.showRateLimits = function() {
+    console.log('⏰ Rate Limit Status:');
+    console.log(`🔧 Rate limit duration: ${DB_RATE_LIMIT_DURATION / 1000} seconds`);
+    console.log(`📈 Total rate limited IPs: ${dbRateLimit.size}`);
+    
+    if (dbRateLimit.size === 0) {
+        console.log('  📭 No rate limited IPs');
+        return;
+    }
+    
+    const now = Date.now();
+    for (const [ip, timestamp] of dbRateLimit.entries()) {
+        const age = now - timestamp;
+        const remainingTime = Math.ceil((DB_RATE_LIMIT_DURATION - age) / 1000);
+        const isActive = age < DB_RATE_LIMIT_DURATION;
+        const status = isActive ? '⏰' : '✅';
+        console.log(`  ${status} ${ip}: ${remainingTime > 0 ? remainingTime + 's remaining' : 'expired'}`);
+    }
+};
+
+window.clearRateLimits = function() {
+    const size = dbRateLimit.size;
+    dbRateLimit.clear();
+    console.log(`🧹 Rate limits cleared (removed ${size} entries)`);
+};
+
+window.setRateLimitDuration = function(seconds) {
+    const oldDuration = DB_RATE_LIMIT_DURATION / 1000;
+    DB_RATE_LIMIT_DURATION = seconds * 1000;
+    console.log(`⚙️ Rate limit duration changed from ${oldDuration}s to ${seconds}s`);
+};
+
 // Enhanced visitor logging with session tracking
 // NOTE: Current table schema only supports basic fields (ip, user_agent, timestamp, page, country, city, region)
 // To enable full tracking, add these fields to your laluvan_logs table:
@@ -289,6 +357,15 @@ async function logVisitor(additionalData = {}) {
         const locationData = await getIpAndLocation();
         const { ip, country, city, region } = locationData;
         
+        // Check if IP is rate limited
+        if (isIpRateLimited(ip)) {
+            console.log('⚠️ IP rate limited, skipping visitor log.');
+            return;
+        }
+
+        // Mark IP as logged
+        markIpAsLogged(ip);
+
         // Prepare log data - only include fields that exist in the table
         const logData = {
             ip: ip,
