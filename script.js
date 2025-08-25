@@ -28,7 +28,15 @@ function initializeSupabase() {
         console.log('🔧 Supabase createClient method:', typeof supabase.createClient);
         
         try {
-            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            // Check if config values are available
+            if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
+                console.error('❌ Missing Supabase configuration!');
+                console.error('❌ SUPABASE_URL:', window.SUPABASE_URL);
+                console.error('❌ SUPABASE_ANON_KEY:', window.SUPABASE_ANON_KEY ? '***' + window.SUPABASE_ANON_KEY.slice(-4) : 'undefined');
+                return;
+            }
+            
+            supabaseClient = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
             console.log('✅ Supabase client initialized:', supabaseClient);
             console.log('🔧 Supabase client methods:', Object.keys(supabaseClient));
             console.log('🔧 Supabase client from method:', typeof supabaseClient.from);
@@ -38,17 +46,13 @@ function initializeSupabase() {
             
             // Test if the laluvan_logs table is accessible
             console.log('🔍 Testing table access...');
-            supabaseClient.from('laluvan_logs').select('count', { count: 'exact', head: true })
-                .then(({ count, error }) => {
-                    if (error) {
-                        console.error('❌ Cannot access laluvan_logs table:', error);
-                    } else {
-                        console.log('✅ laluvan_logs table is accessible');
-                    }
-                })
-                .catch(err => {
-                    console.error('❌ Error testing table access:', err);
-                });
+            testSupabaseConnection().then(success => {
+                if (success) {
+                    console.log('✅ Supabase fully initialized and ready');
+                } else {
+                    console.error('❌ Supabase initialization incomplete');
+                }
+            });
         } catch (error) {
             console.error('❌ Error initializing Supabase client:', error);
         }
@@ -61,13 +65,203 @@ function initializeSupabase() {
 // Enhanced visitor tracking
 let sessionId = null;
 let pageViews = 0;
+let hasLoggedInitialVisit = false; // Prevent duplicate initial logs
+
+// IP address caching system
+const ipCache = new Map();
+const IP_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+const IP_CACHE_MAX_SIZE = 100; // Maximum number of cached IPs
 
 // Generate unique session ID
 function generateSessionId() {
     return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 }
 
+// Get IP and location data with caching
+async function getIpAndLocation() {
+    try {
+        // First, try to get the current IP without making an API call
+        // This helps us check if we already have valid cached data
+        let currentIp = 'unknown';
+        
+        // Check if we have a cached IP that's still valid
+        const cachedData = ipCache.get('current_ip');
+        if (cachedData && (Date.now() - cachedData.timestamp) < IP_CACHE_DURATION) {
+            console.log('🌍 Using cached IP data:', cachedData.data);
+            return cachedData.data;
+        }
+        
+        // If no valid cache, fetch new data
+        console.log('🌍 Fetching new IP and location data...');
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        
+        currentIp = data.ip || 'unknown';
+        
+        const locationData = {
+            ip: currentIp,
+            country: data.country_name || 'unknown',
+            city: data.city || 'unknown',
+            region: data.region || 'unknown'
+        };
+        
+        // Cache the new data with the IP as a key for better tracking
+        ipCache.set('current_ip', {
+            data: locationData,
+            timestamp: Date.now()
+        });
+        
+        // Also cache by IP address for potential future use
+        if (currentIp !== 'unknown') {
+            ipCache.set(currentIp, {
+                data: locationData,
+                timestamp: Date.now()
+            });
+        }
+        
+        // Clean up old cache entries if we exceed max size
+        if (ipCache.size > IP_CACHE_MAX_SIZE) {
+            const entries = Array.from(ipCache.entries());
+            // Sort by timestamp and remove oldest entries
+            entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
+            const toRemove = entries.slice(0, Math.floor(IP_CACHE_MAX_SIZE / 2)); // Remove half
+            toRemove.forEach(([key]) => ipCache.delete(key));
+            console.log(`🧹 Cleaned up ${toRemove.length} old cache entries`);
+        }
+        
+        console.log('🌍 New location data retrieved and cached:', locationData);
+        return locationData;
+        
+    } catch (error) {
+        console.log('⚠️ Could not retrieve location data:', error.message);
+        
+        // Return cached data even if expired, or fallback values
+        const cachedData = ipCache.get('current_ip');
+        if (cachedData) {
+            console.log('🌍 Using expired cached data as fallback:', cachedData.data);
+            return cachedData.data;
+        }
+        
+        return {
+            ip: 'unknown',
+            country: 'unknown',
+            city: 'unknown',
+            region: 'unknown'
+        };
+    }
+}
+
+// Test Supabase connection and table access
+// IMPORTANT: This function only tests read access, never deletes any logs
+async function testSupabaseConnection() {
+    if (!supabaseClient) {
+        console.log('⚠️ Supabase client not available for testing');
+        return false;
+    }
+    
+    try {
+        console.log('🔍 Testing Supabase connection...');
+        
+        // Test basic connection - ONLY READ ACCESS, NEVER DELETE
+        const { data, error } = await supabaseClient
+            .from('laluvan_logs')
+            .select('count', { count: 'exact', head: true });
+            
+        if (error) {
+            console.error('❌ Supabase connection test failed:', error);
+            return false;
+        }
+        
+        console.log('✅ Supabase connection successful');
+        console.log('✅ Table access confirmed');
+        console.log('✅ Logs are safe - no delete operations performed');
+        return true;
+        
+    } catch (error) {
+        console.error('❌ Error testing Supabase connection:', error);
+        return false;
+    }
+}
+
+// Manual test function for visitor logging (can be called from console)
+window.testVisitorLogging = async function() {
+    console.log('🧪 Manual test of visitor logging...');
+    console.log('🔧 Supabase client available:', !!supabaseClient);
+    console.log('🔧 Session ID:', sessionId);
+    console.log('🔧 Page views:', pageViews);
+    
+    if (supabaseClient) {
+        await logVisitor({ event_type: 'manual_test' });
+    } else {
+        console.log('❌ Supabase client not available for testing');
+    }
+};
+
+// Cache management functions (can be called from console)
+window.clearIpCache = function() {
+    const size = ipCache.size;
+    ipCache.clear();
+    console.log(`🧹 IP cache cleared (removed ${size} entries)`);
+};
+
+window.showIpCache = function() {
+    console.log('📋 IP Cache Status:');
+    console.log('🔧 Cache size:', ipCache.size);
+    console.log('🔧 Max size:', IP_CACHE_MAX_SIZE);
+    console.log('🔧 Cache duration:', IP_CACHE_DURATION / 1000, 'seconds');
+    
+    if (ipCache.size === 0) {
+        console.log('  📭 Cache is empty');
+        return;
+    }
+    
+    for (const [key, value] of ipCache.entries()) {
+        const age = Date.now() - value.timestamp;
+        const ageSeconds = Math.floor(age / 1000);
+        const isValid = age < IP_CACHE_DURATION;
+        const status = isValid ? '✅' : '⏰';
+        console.log(`  ${status} ${key}: ${ageSeconds}s old, valid: ${isValid}`, value.data);
+    }
+};
+
+window.refreshIpData = async function() {
+    console.log('🔄 Manually refreshing IP data...');
+    ipCache.delete('current_ip'); // Force refresh
+    const newData = await getIpAndLocation();
+    console.log('✅ New IP data:', newData);
+    return newData;
+};
+
+window.getCacheStats = function() {
+    const now = Date.now();
+    let validEntries = 0;
+    let expiredEntries = 0;
+    let totalAge = 0;
+    
+    for (const [key, value] of ipCache.entries()) {
+        const age = now - value.timestamp;
+        if (age < IP_CACHE_DURATION) {
+            validEntries++;
+        } else {
+            expiredEntries++;
+        }
+        totalAge += age;
+    }
+    
+    const avgAge = ipCache.size > 0 ? Math.floor(totalAge / ipCache.size / 1000) : 0;
+    
+    console.log('📊 Cache Statistics:');
+    console.log(`  📈 Total entries: ${ipCache.size}`);
+    console.log(`  ✅ Valid entries: ${validEntries}`);
+    console.log(`  ⏰ Expired entries: ${expiredEntries}`);
+    console.log(`  ⏱️ Average age: ${avgAge}s`);
+    console.log(`  🎯 Cache hit rate: ${validEntries > 0 ? Math.round((validEntries / ipCache.size) * 100) : 0}%`);
+};
+
 // Enhanced visitor logging with session tracking
+// NOTE: Current table schema only supports basic fields (ip, user_agent, timestamp, page, country, city, region)
+// To enable full tracking, add these fields to your laluvan_logs table:
+// ALTER TABLE public.laluvan_logs ADD COLUMN session_id text null, ADD COLUMN page_views integer null, ADD COLUMN screen_resolution text null, ADD COLUMN viewport text null, ADD COLUMN referrer text null;
 async function logVisitor(additionalData = {}) {
     try {
         // Generate session ID if not exists
@@ -91,28 +285,11 @@ async function logVisitor(additionalData = {}) {
         // Get referrer
         const referrer = document.referrer || 'direct';
         
-        // Get IP address and location data
-        let ip = 'unknown';
-        let country = 'unknown';
-        let city = 'unknown';
-        let region = 'unknown';
+        // Get IP address and location data with caching
+        const locationData = await getIpAndLocation();
+        const { ip, country, city, region } = locationData;
         
-        try {
-            // Use ipapi.co for IP and location data (free tier)
-            const response = await fetch('https://ipapi.co/json/');
-            const data = await response.json();
-            
-            ip = data.ip || 'unknown';
-            country = data.country_name || 'unknown';
-            city = data.city || 'unknown';
-            region = data.region || 'unknown';
-            
-            // console.log('🌍 Location data retrieved:', { ip, country, city, region });
-        } catch (locationError) {
-            console.log('⚠️ Could not retrieve location data:', locationError.message);
-        }
-        
-        // Prepare log data
+        // Prepare log data - only include fields that exist in the table
         const logData = {
             ip: ip,
             user_agent: userAgent,
@@ -120,13 +297,9 @@ async function logVisitor(additionalData = {}) {
             page: page,
             country: country,
             city: city,
-            region: region,
-            session_id: sessionId,
-            page_views: pageViews,
-            screen_resolution: screenResolution,
-            viewport: viewport,
-            referrer: referrer,
-            ...additionalData
+            region: region
+            // Note: session_id, page_views, screen_resolution, viewport, referrer 
+            // are not included as they don't exist in the current table schema
         };
         
         console.log('📊 Logging visitor:', logData);
@@ -137,10 +310,18 @@ async function logVisitor(additionalData = {}) {
             return;
         }
         
+        // Test connection before attempting to log
+        const connectionOk = await testSupabaseConnection();
+        if (!connectionOk) {
+            console.log('⚠️ Supabase connection test failed, skipping visitor log');
+            return;
+        }
+        
         // Send to Supabase
         console.log('🚀 Attempting to insert into laluvan_logs table...');
         console.log('🔧 Table name: laluvan_logs');
         console.log('🔧 Data to insert:', logData);
+        console.log('📝 Note: Only basic visitor data is logged due to table schema limitations');
         
         const { data, error } = await supabaseClient
             .from('laluvan_logs')
@@ -160,36 +341,66 @@ async function logVisitor(additionalData = {}) {
 
 // Log visitor when page loads
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 DOM loaded, initializing Supabase...');
+    console.log('🔧 Config values available:', {
+        url: !!window.SUPABASE_URL,
+        key: !!window.SUPABASE_ANON_KEY
+    });
+    
     // Initialize Supabase first
     initializeSupabase();
     
     // Listen for Supabase ready event
     window.addEventListener('supabaseReady', () => {
         console.log('🎯 Supabase ready event received, logging visitor...');
-        logVisitor();
+        if (!hasLoggedInitialVisit) {
+            console.log('📝 Logging initial visit...');
+            logVisitor();
+            hasLoggedInitialVisit = true;
+        } else {
+            console.log('⚠️ Initial visit already logged, skipping...');
+        }
     });
     
     // Fallback: also try to log visitor after a delay
     setTimeout(() => {
-        if (supabaseClient && !sessionId) {
+        console.log('🕐 Fallback timeout reached...');
+        console.log('🔧 Supabase client available:', !!supabaseClient);
+        console.log('🔧 Has logged initial visit:', hasLoggedInitialVisit);
+        
+        if (supabaseClient && !hasLoggedInitialVisit) {
             console.log('🕐 Fallback: logging visitor after delay...');
             logVisitor();
+            hasLoggedInitialVisit = true;
+        } else if (hasLoggedInitialVisit) {
+            console.log('✅ Initial visit already logged via Supabase ready event');
+        } else {
+            console.log('❌ Supabase client still not available after delay');
         }
-    }, 1000);
+    }, 2000);
 });
 
-// Log visitor on page visibility change (when user returns to tab)
+// Only log on page visibility change if it's been more than 5 minutes
+let lastVisibilityLog = 0;
 document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
-        // User returned to the page
-        logVisitor();
+        const now = Date.now();
+        // Only log if it's been more than 5 minutes since last visibility log
+        if (now - lastVisibilityLog > 300000) { // 5 minutes
+            console.log('👁️ User returned to page, logging visit...');
+            logVisitor({ event_type: 'visibility_change' });
+            lastVisibilityLog = now;
+        }
     }
 });
 
-// Log visitor on page unload (when user leaves)
+// Log visitor on page unload (when user leaves) - but only if we haven't logged recently
 window.addEventListener('beforeunload', () => {
-    // Note: This might not always execute due to browser limitations
-    logVisitor();
+    const now = Date.now();
+    if (now - lastVisibilityLog > 60000) { // Only if it's been more than 1 minute
+        console.log('👋 User leaving page, logging final visit...');
+        logVisitor({ event_type: 'page_unload' });
+    }
 });
 
 
